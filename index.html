@@ -1,476 +1,527 @@
-// --- 데이터 (PDF 기반 + 선생님 요청 반영) ---
-const DEPARTMENTS = {
-    psychology: {
-        name: "심리·인지과학학부",
-        icon: "brain",
-        color: "bg-pink-100 text-pink-700",
-        // ★ 여기가 업데이트된 부분입니다 (4과목) ★
-        scenarios: {
-            social: {
-                title: "1학년 통합사회 (태도 vs 주도성)",
-                studentA: {
-                    label: "학생 A (우수)",
-                    text: "항상 수업 규칙을 잘 지키며 예의바른 태도로 수업을 듣고, 주어진 과제를 즉시 수행하는 적극적이고 능동적인 모습을 보임. 세계화 및 세계 문화 단원 학습에 특히 관심과 흥미를 보였으며, 수행 평가와 지필 평가에서 모두 좋은 성적을 거두어 교과 학습에 대한 자신감이 크게 향상됨."
-                },
-                studentB: {
-                    label: "학생 B (아쉬움)",
-                    text: "수업 시간에 늦지 않고 규칙을 잘 지키며, 선생님의 지도에 잘 따르는 모범적인 학생임. '세계화' 단원 수행평가에서 조사한 내용을 PPT로 깔끔하게 정리하여 기한 내에 제출함. 지필 평가 성적도 꾸준히 유지하려고 노력하며, 조별 활동 시 조용히 자신의 역할을 수행함."
-                },
-                expertOpinion: "학생 A는 규칙 준수를 넘어 '능동적인 수행'과 '자신감 향상'이라는 성장의 서사가 보입니다. 반면 학생 B는 '성실함'은 갖췄으나, 시키지 않아도 스스로 움직이는 '자기주도적 호기심'이 드러나지 않아 아쉽습니다."
-            },
-            history: {
-                title: "1학년 한국사 (암기 vs 분석)",
-                studentA: {
-                    label: "학생 A (우수)",
-                    text: "자신의 학습 상태를 중간 점검하며 부족한 부분을 파악하는 메타인지력을 갖춤. 주요 주제를 범주로 묶고 표로 정리하는 등 자기만의 효율적 학습 방법을 만듦. '붕당 정치' 사료 탐구 활동에서 용어가 의미하는 사건과 인물을 분석하며 역사적 탐구력을 드러냄."
-                },
-                studentB: {
-                    label: "학생 B (아쉬움)",
-                    text: "역사 수업에 성실하게 임하며 판서 내용을 빠짐없이 필기함. '붕당 정치' 단원에서 각 붕당의 이름과 주요 인물을 정확하게 암기하여 시험에서 좋은 성적을 거둠. 교과서에 나오는 사료를 읽고 그 내용이 무엇인지 선생님의 설명을 통해 잘 이해하고 정리함."
-                },
-                expertOpinion: "학생 A는 지식을 '구조화(표 정리)'하고 사료를 '분석'하는 역량이 돋보입니다. 학생 B는 선생님의 설명을 받아적고 '암기'하는 수동적 학습에 머물러 있어, 대학 수학에 필요한 탐구력이 부족해 보입니다."
-            },
-            reading: {
-                title: "2학년 독서 (요약 vs 확장)",
-                studentA: {
-                    label: "학생 A (우수)",
-                    text: "책대화 활동에서 책을 읽으며 드는 의문점을 정리해 대화를 나눔. '긍정 심리학'에서 바라본 행복의 4가지 요소를 정리해 발표함. 이를 통해 심리학에 흥미를 느끼고, 다른 학자들의 행복론을 추가로 탐구하고 싶다는 소감문을 작성함."
-                },
-                studentB: {
-                    label: "학생 B (아쉬움)",
-                    text: "'피구왕 서영'을 읽고 책의 전체적인 줄거리를 요약하여 친구들에게 발표함. 주인공이 겪는 갈등 상황에 공감하며, 가장 인상 깊은 구절로 주인공의 대사를 꼽아 그 이유를 설명함. 독후감 과제를 정해진 분량에 맞춰 잘 작성하여 제출함."
-                },
-                expertOpinion: "학생 A는 독서 중 생긴 의문을 '심리학 이론'과 연결하고 '추가 탐구'로 확장했습니다. 학생 B는 '줄거리 요약'과 '단순 감상'에 그쳐, 독서를 통한 지적 확장이 보이지 않습니다."
-            },
-            english: {
-                title: "2학년 영어Ⅱ (기능 vs 통찰)",
-                studentA: {
-                    label: "학생 A (우수)",
-                    text: "진로 도서 'Maybe You Should Talk to Someone'을 읽고 '우리는 손실 없이 변화를 이룰 수 없다'는 문장을 인용하며 변화 뒤의 손실에 대해 깊이 이해함. 침묵 효과 지문 학습 후 위계질서 속 또 다른 심리적 효과에 대해 호기심을 갖고 추가 조사를 진행함."
-                },
-                studentB: {
-                    label: "학생 B (아쉬움)",
-                    text: "진로 관련 영어 원서를 선택해 모르는 단어를 사전에서 찾아 꼼꼼히 정리함. 복잡한 문장 구조를 문법적으로 분석하여 정확하게 해석하려고 노력함. 성실한 학습 태도로 단어 시험에서 항상 만점을 받음."
-                },
-                expertOpinion: "학생 A는 텍스트를 통해 '통찰(변화와 손실)'을 얻고 이를 '사회 현상'과 연결했습니다. 학생 B는 단어 암기, 해석 등 '영어 기술 습득'에만 치중하여 사고의 깊이를 보여주지 못했습니다."
-            }
-        }
-    },
-    // (다른 학과는 기존 유지)
-    chemistry: {
-        name: "화학과",
-        icon: "microscope",
-        color: "bg-emerald-100 text-emerald-700",
-        scenarios: {
-            academic: {
-                title: "학업역량 (실험 설계)",
-                studentA: { label: "학생 A", text: "물리학 실험에서 스넬 법칙을 적용해 굴절률을 계산함. 오차를 줄이기 위해 여러 번 측정하여 평균값을 구하는 등 정밀한 탐구 태도를 보임." },
-                studentB: { label: "학생 B", text: "빛의 굴절 실험에 참여하여 조원들과 협력함. 실험 도구를 정리하고 보고서를 기한 내에 제출함. 과학에 대한 흥미가 높음." },
-                expertOpinion: "학생 A는 '오차 보정'을 위한 반복 측정 등 연구자의 기본 소양을 보여주었으나, 학생 B는 단순 참여와 성실성에 그쳤습니다."
-            },
-            career: {
-                title: "진로역량 (심화 탐구)",
-                studentA: { label: "학생 A", text: "마인크래프트 코드빌더를 이용해 가상 공간에서 화학 물질 합성을 시도함. 현실 제약을 기술로 극복하고 후속 연구로 AI 결합을 기획함." },
-                studentB: { label: "학생 B", text: "화학 동아리에서 다양한 소재의 합성 실험을 수행함. 실험 순서를 잘 지키고 결과를 친구들에게 설명함." },
-                expertOpinion: "학생 A는 창의적인 도구(코딩)를 활용해 문제를 해결하고 심화 연구로 나아가는 자기주도성이 탁월합니다."
-            },
-            community: {
-                title: "공동체역량 (리더십)",
-                studentA: { label: "학생 A", text: "보건 도우미를 자처하여 응급 키트와 위생 물품을 시스템적으로 관리함. 친구들을 상담 교사에게 연계하는 등 실질적 해결책을 제시함." },
-                studentB: { label: "학생 B", text: "학급 청결을 위해 노력하고 아픈 친구를 보건실에 데려다주는 등 친절한 모습을 보임." },
-                expertOpinion: "학생 A는 시스템을 만들고 전문가와 연계하는 '문제 해결형 리더십'을 보여주었습니다."
-            }
-        }
-    },
-    security: {
-        name: "지능정보보호학부",
-        icon: "shield",
-        color: "bg-blue-100 text-blue-700",
-        scenarios: {
-            academic: {
-                title: "학업역량 (융합 사고)",
-                studentA: { label: "학생 A", text: "미적분에서 매개변수와 컴퓨터 커뮤니케이션(CMS)의 공통점을 찾아내는 창의적 접근을 보임. 수학적 개념을 전공과 연결함." },
-                studentB: { label: "학생 B", text: "미적분 문제 풀이 능력이 우수하고 수업 집중력이 좋음. 매개변수 개념을 잘 이해하고 과제를 성실히 수행함." },
-                expertOpinion: "학생 A는 수학 개념을 전공 지식과 융합하는 사고력을 보인 반면, 학생 B는 문제 풀이 수준에 머물렀습니다."
-            },
-            career: {
-                title: "진로역량 (기술 탐구)",
-                studentA: { label: "학생 A", text: "해시 함수의 취약점을 발견하고 솔트(Salt) 기법을 적용해 보안을 강화하는 과정을 직접 시연함." },
-                studentB: { label: "학생 B", text: "정보보안 전문가를 꿈꾸며 관련 도서를 읽고 해킹의 위험성에 대한 보고서를 작성함." },
-                expertOpinion: "학생 A는 구체적인 기술(솔트 기법)을 실제로 적용해보는 탐구력이 돋보입니다."
-            },
-            community: {
-                title: "공동체역량 (배려)",
-                studentA: { label: "학생 A", text: "소외된 친구가 부담 갖지 않도록 조용히 챙기며, 리더로서 학급의 방향성을 제시하고 소통함." },
-                studentB: { label: "학생 B", text: "목소리가 크고 활발하여 분위기를 주도함. 선생님 심부름을 잘하고 친구들 사이에서 인기가 많음." },
-                expertOpinion: "학생 A는 섬세한 배려와 방향성을 제시하는 리더십을, 학생 B는 단순한 사교성을 보여줍니다."
-            }
-        }
-    }
-};
-
-// --- State Management ---
-let state = {
-    step: 0,
-    dept: 'psychology',
-    category: '', // 초기값 비움 (자동 설정됨)
-    showExpert: false,
-    studentPlan: { careerGoal: '', subject: '', activityTopic: '', activityProcess: '', learningPoint: '' },
-    isFeedbackLoading: false
-};
-
-// 초기 카테고리 설정 함수
-function setInitialCategory() {
-    const scenarios = DEPARTMENTS[state.dept].scenarios;
-    state.category = Object.keys(scenarios)[0];
-}
-
-// --- Render Functions ---
-const app = document.getElementById('app');
-
-function render() {
-    if (!state.category) setInitialCategory(); // 카테고리가 없으면 첫 번째 것으로 설정
-
-    app.innerHTML = `
-        ${renderStepIndicator()}
-        <div class="transition-all duration-300">
-            ${state.step === 0 ? renderAnalysis() : ''}
-            ${state.step === 1 ? renderPlanning() : ''}
-            ${state.step === 2 ? renderFeedback() : ''}
-        </div>
-    `;
-    lucide.createIcons();
-}
-
-function renderStepIndicator() {
-    const steps = ["비교 분석 시뮬레이션", "나만의 생기부 설계", "AI 입학사정관 피드백"];
-    return `
-        <div class="flex justify-between mb-8 overflow-x-auto pb-2">
-            ${steps.map((s, i) => `
-                <div class="flex items-center ${i <= state.step ? 'text-indigo-600 font-bold' : 'text-gray-400'} whitespace-nowrap mr-4">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center mr-2 ${i <= state.step ? 'bg-indigo-600 text-white' : 'bg-gray-200'}">
-                        ${i + 1}
-                    </div>
-                    <span>${s}</span>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-function renderAnalysis() {
-    const deptData = DEPARTMENTS[state.dept];
-    const scenario = deptData.scenarios[state.category];
-    
-    // 버튼 동적 생성 (과목 수에 따라 달라짐)
-    const categoryButtons = Object.entries(deptData.scenarios).map(([key, data]) => {
-        const isSelected = state.category === key;
-        // 버튼 텍스트에서 괄호 앞부분만 따오기 (너무 길어지는 것 방지)
-        const btnLabel = data.title.split('(')[0].trim(); 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 입학사정관: 생기부 디자인 연구소 (Ver 2.0)</title>
+    <!-- Tailwind CSS (디자인) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (아이콘) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        return `
-            <button onclick="updateState('category', '${key}')"
-                class="px-3 py-1 rounded-full text-xs font-bold border transition-colors mb-2 whitespace-nowrap
-                ${isSelected ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-500 border-gray-300'}">
-                ${btnLabel}
-            </button>
-        `;
-    }).join('');
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 pb-20">
 
-    return `
-        <div class="space-y-6 fade-in">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center justify-center">
-                    <i data-lucide="scale" class="mr-2"></i> 입학사정관 비교 분석 시뮬레이션
-                </h2>
-                <p class="text-gray-500 mt-2">두 학생의 생기부를 읽고, 어떤 학생이 더 우수한 평가를 받을지 분석해보세요.</p>
+    <!-- Header -->
+    <header class="bg-white border-b sticky top-0 z-10 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="book-open" class="text-indigo-600 w-8 h-8"></i>
+                <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-gray-900">
+                    나만의 입학사정관 <span class="text-indigo-600 font-medium text-sm md:text-base ml-2">생기부 디자인 연구소 (Ver 2.0)</span>
+                </h1>
             </div>
-
-            <!-- Filters -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
-                <div class="flex flex-col gap-4">
-                    <!-- 학과 선택 -->
-                    <div class="flex space-x-2 overflow-x-auto pb-2">
-                        ${Object.entries(DEPARTMENTS).map(([key, data]) => `
-                            <button onclick="updateState('dept', '${key}')" 
-                                class="flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${state.dept === key ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-                                <i data-lucide="${data.icon}" class="w-4 h-4 mr-2"></i> ${data.name}
-                            </button>
-                        `).join('')}
-                    </div>
-                    <!-- 시나리오 선택 (동적 버튼) -->
-                    <div class="flex flex-wrap gap-2">
-                        ${categoryButtons}
-                    </div>
-                </div>
+            <div class="text-xs md:text-sm text-gray-500 font-medium">
+                서울여대 2026 가이드북 기반
             </div>
+        </div>
+    </header>
 
-            <h3 class="text-xl font-bold text-indigo-900 border-l-4 border-indigo-500 pl-3 mb-4">
-                ${scenario.title} 비교
-            </h3>
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8" id="app">
+        <!-- JS로 내용이 렌더링 됩니다 -->
+    </main>
 
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 relative">
-                    <div class="absolute -top-3 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-                        ${scenario.studentA.label}
-                    </div>
-                    <p class="text-gray-700 leading-relaxed mt-4 min-h-[120px]">
-                        "${scenario.studentA.text}"
-                    </p>
+    <script>
+        // --- 데이터 (선생님 요청 반영: 심리학과 4과목 + 기존 학과 데이터) ---
+        const DEPARTMENTS = {
+            psychology: {
+                name: "심리·인지과학학부",
+                icon: "brain",
+                color: "bg-pink-100 text-pink-700",
+                scenarios: {
+                    social: {
+                        title: "1학년 통합사회 (태도 vs 주도성)",
+                        studentA: {
+                            label: "학생 A (우수)",
+                            text: "항상 수업 규칙을 잘 지키며 예의바른 태도로 수업을 듣고, 주어진 과제를 즉시 수행하는 적극적이고 능동적인 모습을 보임. 세계화 및 세계 문화 단원 학습에 특히 관심과 흥미를 보였으며, 수행 평가와 지필 평가에서 모두 좋은 성적을 거두어 교과 학습에 대한 자신감이 크게 향상됨."
+                        },
+                        studentB: {
+                            label: "학생 B (아쉬움)",
+                            text: "수업 시간에 늦지 않고 규칙을 잘 지키며, 선생님의 지도에 잘 따르는 모범적인 학생임. '세계화' 단원 수행평가에서 조사한 내용을 PPT로 깔끔하게 정리하여 기한 내에 제출함. 지필 평가 성적도 꾸준히 유지하려고 노력하며, 조별 활동 시 조용히 자신의 역할을 수행함."
+                        },
+                        expertOpinion: "학생 A는 규칙 준수를 넘어 '능동적인 수행'과 '자신감 향상'이라는 성장의 서사가 보입니다. 반면 학생 B는 '성실함'은 갖췄으나, 시키지 않아도 스스로 움직이는 '자기주도적 호기심'이 드러나지 않아 아쉽습니다."
+                    },
+                    history: {
+                        title: "1학년 한국사 (암기 vs 분석)",
+                        studentA: {
+                            label: "학생 A (우수)",
+                            text: "자신의 학습 상태를 중간 점검하며 부족한 부분을 파악하는 메타인지력을 갖춤. 주요 주제를 범주로 묶고 표로 정리하는 등 자기만의 효율적 학습 방법을 만듦. '붕당 정치' 사료 탐구 활동에서 용어가 의미하는 사건과 인물을 분석하며 역사적 탐구력을 드러냄."
+                        },
+                        studentB: {
+                            label: "학생 B (아쉬움)",
+                            text: "역사 수업에 성실하게 임하며 판서 내용을 빠짐없이 필기함. '붕당 정치' 단원에서 각 붕당의 이름과 주요 인물을 정확하게 암기하여 시험에서 좋은 성적을 거둠. 교과서에 나오는 사료를 읽고 그 내용이 무엇인지 선생님의 설명을 통해 잘 이해하고 정리함."
+                        },
+                        expertOpinion: "학생 A는 지식을 '구조화(표 정리)'하고 사료를 '분석'하는 역량이 돋보입니다. 학생 B는 선생님의 설명을 받아적고 '암기'하는 수동적 학습에 머물러 있어, 대학 수학에 필요한 탐구력이 부족해 보입니다."
+                    },
+                    reading: {
+                        title: "2학년 독서 (요약 vs 확장)",
+                        studentA: {
+                            label: "학생 A (우수)",
+                            text: "책대화 활동에서 책을 읽으며 드는 의문점을 정리해 대화를 나눔. '긍정 심리학'에서 바라본 행복의 4가지 요소를 정리해 발표함. 이를 통해 심리학에 흥미를 느끼고, 다른 학자들의 행복론을 추가로 탐구하고 싶다는 소감문을 작성함."
+                        },
+                        studentB: {
+                            label: "학생 B (아쉬움)",
+                            text: "'피구왕 서영'을 읽고 책의 전체적인 줄거리를 요약하여 친구들에게 발표함. 주인공이 겪는 갈등 상황에 공감하며, 가장 인상 깊은 구절로 주인공의 대사를 꼽아 그 이유를 설명함. 독후감 과제를 정해진 분량에 맞춰 잘 작성하여 제출함."
+                        },
+                        expertOpinion: "학생 A는 독서 중 생긴 의문을 '심리학 이론'과 연결하고 '추가 탐구'로 확장했습니다. 학생 B는 '줄거리 요약'과 '단순 감상'에 그쳐, 독서를 통한 지적 확장이 보이지 않습니다."
+                    },
+                    english: {
+                        title: "2학년 영어Ⅱ (기능 vs 통찰)",
+                        studentA: {
+                            label: "학생 A (우수)",
+                            text: "진로 도서 'Maybe You Should Talk to Someone'을 읽고 '우리는 손실 없이 변화를 이룰 수 없다'는 문장을 인용하며 변화 뒤의 손실에 대해 깊이 이해함. 침묵 효과 지문 학습 후 위계질서 속 또 다른 심리적 효과에 대해 호기심을 갖고 추가 조사를 진행함."
+                        },
+                        studentB: {
+                            label: "학생 B (아쉬움)",
+                            text: "진로 관련 영어 원서를 선택해 모르는 단어를 사전에서 찾아 꼼꼼히 정리함. 복잡한 문장 구조를 문법적으로 분석하여 정확하게 해석하려고 노력함. 성실한 학습 태도로 단어 시험에서 항상 만점을 받음."
+                        },
+                        expertOpinion: "학생 A는 텍스트를 통해 '통찰(변화와 손실)'을 얻고 이를 '사회 현상'과 연결했습니다. 학생 B는 단어 암기, 해석 등 '영어 기술 습득'에만 치중하여 사고의 깊이를 보여주지 못했습니다."
+                    }
+                }
+            },
+            chemistry: {
+                name: "화학과",
+                icon: "microscope",
+                color: "bg-emerald-100 text-emerald-700",
+                scenarios: {
+                    academic: {
+                        title: "학업역량 (실험 설계)",
+                        studentA: { label: "학생 A", text: "물리학 실험에서 스넬 법칙을 적용해 굴절률을 계산함. 오차를 줄이기 위해 여러 번 측정하여 평균값을 구하는 등 정밀한 탐구 태도를 보임." },
+                        studentB: { label: "학생 B", text: "빛의 굴절 실험에 참여하여 조원들과 협력함. 실험 도구를 정리하고 보고서를 기한 내에 제출함. 과학에 대한 흥미가 높음." },
+                        expertOpinion: "학생 A는 '오차 보정'을 위한 반복 측정 등 연구자의 기본 소양을 보여주었으나, 학생 B는 단순 참여와 성실성에 그쳤습니다."
+                    },
+                    career: {
+                        title: "진로역량 (심화 탐구)",
+                        studentA: { label: "학생 A", text: "마인크래프트 코드빌더를 이용해 가상 공간에서 화학 물질 합성을 시도함. 현실 제약을 기술로 극복하고 후속 연구로 AI 결합을 기획함." },
+                        studentB: { label: "학생 B", text: "화학 동아리에서 다양한 소재의 합성 실험을 수행함. 실험 순서를 잘 지키고 결과를 친구들에게 설명함." },
+                        expertOpinion: "학생 A는 창의적인 도구(코딩)를 활용해 문제를 해결하고 심화 연구로 나아가는 자기주도성이 탁월합니다."
+                    },
+                    community: {
+                        title: "공동체역량 (리더십)",
+                        studentA: { label: "학생 A", text: "보건 도우미를 자처하여 응급 키트와 위생 물품을 시스템적으로 관리함. 친구들을 상담 교사에게 연계하는 등 실질적 해결책을 제시함." },
+                        studentB: { label: "학생 B", text: "학급 청결을 위해 노력하고 아픈 친구를 보건실에 데려다주는 등 친절한 모습을 보임." },
+                        expertOpinion: "학생 A는 시스템을 만들고 전문가와 연계하는 '문제 해결형 리더십'을 보여주었습니다."
+                    }
+                }
+            },
+            security: {
+                name: "지능정보보호학부",
+                icon: "shield",
+                color: "bg-blue-100 text-blue-700",
+                scenarios: {
+                    academic: {
+                        title: "학업역량 (융합 사고)",
+                        studentA: { label: "학생 A", text: "미적분에서 매개변수와 컴퓨터 커뮤니케이션(CMS)의 공통점을 찾아내는 창의적 접근을 보임. 수학적 개념을 전공과 연결함." },
+                        studentB: { label: "학생 B", text: "미적분 문제 풀이 능력이 우수하고 수업 집중력이 좋음. 매개변수 개념을 잘 이해하고 과제를 성실히 수행함." },
+                        expertOpinion: "학생 A는 수학 개념을 전공 지식과 융합하는 사고력을 보인 반면, 학생 B는 문제 풀이 수준에 머물렀습니다."
+                    },
+                    career: {
+                        title: "진로역량 (기술 탐구)",
+                        studentA: { label: "학생 A", text: "해시 함수의 취약점을 발견하고 솔트(Salt) 기법을 적용해 보안을 강화하는 과정을 직접 시연함." },
+                        studentB: { label: "학생 B", text: "정보보안 전문가를 꿈꾸며 관련 도서를 읽고 해킹의 위험성에 대한 보고서를 작성함." },
+                        expertOpinion: "학생 A는 구체적인 기술(솔트 기법)을 실제로 적용해보는 탐구력이 돋보입니다."
+                    },
+                    community: {
+                        title: "공동체역량 (배려)",
+                        studentA: { label: "학생 A", text: "소외된 친구가 부담 갖지 않도록 조용히 챙기며, 리더로서 학급의 방향성을 제시하고 소통함." },
+                        studentB: { label: "학생 B", text: "목소리가 크고 활발하여 분위기를 주도함. 선생님 심부름을 잘하고 친구들 사이에서 인기가 많음." },
+                        expertOpinion: "학생 A는 섬세한 배려와 방향성을 제시하는 리더십을, 학생 B는 단순한 사교성을 보여줍니다."
+                    }
+                }
+            }
+        };
+
+        // --- State Management ---
+        let state = {
+            step: 0,
+            dept: 'psychology',
+            category: '', // 초기값은 비움 (자동 설정됨)
+            showExpert: false,
+            studentPlan: {
+                careerGoal: '',
+                subject: '',
+                activityTopic: '',
+                activityProcess: '',
+                learningPoint: ''
+            },
+            isFeedbackLoading: false
+        };
+
+        // 초기 카테고리 설정 함수
+        function setInitialCategory() {
+            const scenarios = DEPARTMENTS[state.dept].scenarios;
+            state.category = Object.keys(scenarios)[0];
+        }
+
+        // --- Render Functions ---
+        const app = document.getElementById('app');
+
+        function render() {
+            if (!state.category) setInitialCategory();
+
+            app.innerHTML = `
+                ${renderStepIndicator()}
+                <div class="transition-all duration-300">
+                    ${state.step === 0 ? renderAnalysis() : ''}
+                    ${state.step === 1 ? renderPlanning() : ''}
+                    ${state.step === 2 ? renderFeedback() : ''}
                 </div>
-                <div class="bg-orange-50 p-6 rounded-xl border border-orange-200 relative">
-                    <div class="absolute -top-3 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">
-                        ${scenario.studentB.label}
-                    </div>
-                    <p class="text-gray-700 leading-relaxed mt-4 min-h-[120px]">
-                        "${scenario.studentB.text}"
-                    </p>
-                </div>
-            </div>
+            `;
+            lucide.createIcons(); // 아이콘 렌더링
+        }
 
-            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mt-6">
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    🕵️‍♀️ 예비 입학사정관님의 분석:
-                </label>
-                <p class="text-xs text-gray-500 mb-3">어떤 학생이 더 우수하다고 생각하나요? 그 이유는 무엇인가요?</p>
-                <textarea class="w-full p-4 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-24 bg-gray-50" placeholder="여기에 분석 내용을 적어주세요..."></textarea>
-                <div class="flex justify-end mt-4">
-                    <button onclick="toggleExpert(true)" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center shadow-md font-bold">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> 실제 평가 결과 확인하기
+        function renderStepIndicator() {
+            const steps = ["비교 분석 시뮬레이션", "나만의 생기부 설계", "AI 입학사정관 피드백"];
+            return `
+                <div class="flex justify-between mb-8 overflow-x-auto pb-2">
+                    ${steps.map((s, i) => `
+                        <div class="flex items-center ${i <= state.step ? 'text-indigo-600 font-bold' : 'text-gray-400'} whitespace-nowrap mr-4">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center mr-2 ${i <= state.step ? 'bg-indigo-600 text-white' : 'bg-gray-200'}">
+                                ${i + 1}
+                            </div>
+                            <span>${s}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderAnalysis() {
+            const deptData = DEPARTMENTS[state.dept];
+            const scenario = deptData.scenarios[state.category];
+            
+            // 버튼 동적 생성
+            const categoryButtons = Object.entries(deptData.scenarios).map(([key, data]) => {
+                const isSelected = state.category === key;
+                const btnLabel = data.title.split('(')[0].trim(); 
+                
+                return `
+                    <button onclick="updateState('category', '${key}')"
+                        class="px-3 py-1 rounded-full text-xs font-bold border transition-colors mb-2 whitespace-nowrap
+                        ${isSelected ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-500 border-gray-300'}">
+                        ${btnLabel}
                     </button>
-                </div>
-            </div>
+                `;
+            }).join('');
 
-            ${state.showExpert ? `
-                <div class="bg-gray-800 text-white p-6 rounded-xl mt-4 slide-up border-l-4 border-yellow-400">
-                    <h3 class="font-bold text-lg text-yellow-400 mb-2 flex items-center">
-                        <i data-lucide="award" class="mr-2"></i> 실제 입학사정관의 평가
+            return `
+                <div class="space-y-6 fade-in">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center justify-center">
+                            <i data-lucide="scale" class="mr-2"></i> 입학사정관 비교 분석 시뮬레이션
+                        </h2>
+                        <p class="text-gray-500 mt-2">두 학생의 생기부를 읽고, 어떤 학생이 더 우수한 평가를 받을지 분석해보세요.</p>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+                        <div class="flex flex-col gap-4">
+                            <!-- 학과 선택 -->
+                            <div class="flex space-x-2 overflow-x-auto pb-2">
+                                ${Object.entries(DEPARTMENTS).map(([key, data]) => `
+                                    <button onclick="updateState('dept', '${key}')" 
+                                        class="flex items-center px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${state.dept === key ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                                        <i data-lucide="${data.icon}" class="w-4 h-4 mr-2"></i> ${data.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <!-- 시나리오 선택 (동적 버튼) -->
+                            <div class="flex flex-wrap gap-2">
+                                ${categoryButtons}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-indigo-900 border-l-4 border-indigo-500 pl-3 mb-4">
+                        ${scenario.title} 비교
                     </h3>
-                    <p class="leading-relaxed text-gray-200">
-                        ${scenario.expertOpinion}
-                    </p>
-                    <div class="mt-6 flex justify-center">
-                        <button onclick="setStep(1)" class="bg-white text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center">
-                            분석 내용을 바탕으로 내 생기부 설계하기 <i data-lucide="chevron-right" class="ml-2"></i>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 relative">
+                            <div class="absolute -top-3 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">
+                                ${scenario.studentA.label}
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mt-4 min-h-[120px]">
+                                "${scenario.studentA.text}"
+                            </p>
+                        </div>
+                        <div class="bg-orange-50 p-6 rounded-xl border border-orange-200 relative">
+                            <div class="absolute -top-3 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">
+                                ${scenario.studentB.label}
+                            </div>
+                            <p class="text-gray-700 leading-relaxed mt-4 min-h-[120px]">
+                                "${scenario.studentB.text}"
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mt-6">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            🕵️‍♀️ 예비 입학사정관님의 분석:
+                        </label>
+                        <p class="text-xs text-gray-500 mb-3">어떤 학생이 더 우수하다고 생각하나요? 그 이유는 무엇인가요?</p>
+                        <textarea class="w-full p-4 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-24 bg-gray-50" placeholder="여기에 분석 내용을 적어주세요..."></textarea>
+                        <div class="flex justify-end mt-4">
+                            <button onclick="toggleExpert(true)" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center shadow-md font-bold">
+                                <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> 실제 평가 결과 확인하기
+                            </button>
+                        </div>
+                    </div>
+
+                    ${state.showExpert ? `
+                        <div class="bg-gray-800 text-white p-6 rounded-xl mt-4 slide-up border-l-4 border-yellow-400">
+                            <h3 class="font-bold text-lg text-yellow-400 mb-2 flex items-center">
+                                <i data-lucide="award" class="mr-2"></i> 실제 입학사정관의 평가
+                            </h3>
+                            <p class="leading-relaxed text-gray-200">
+                                ${scenario.expertOpinion}
+                            </p>
+                            <div class="mt-6 flex justify-center">
+                                <button onclick="setStep(1)" class="bg-white text-gray-900 px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform flex items-center">
+                                    분석 내용을 바탕으로 내 생기부 설계하기 <i data-lucide="chevron-right" class="ml-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderPlanning() {
+            return `
+                <div class="space-y-6 fade-in">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-8 rounded-xl text-white mb-8">
+                        <h2 class="text-2xl font-bold mb-2">🚀 생기부 디자인 워크숍</h2>
+                        <p class="opacity-90">
+                            앞서 본 우수 사례들처럼, <strong>[구체적 소재 - 심화 탐구 - 진로 연계]</strong>가 드러나도록 설계해봅시다.
+                        </p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">희망 진로 (학과)</label>
+                                <input type="text" value="${state.studentPlan.careerGoal}" oninput="updatePlan('careerGoal', this.value)" 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 심리학과, 화학공학과">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">관련 교과목 및 단원</label>
+                                <input type="text" value="${state.studentPlan.subject}" oninput="updatePlan('subject', this.value)"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 확률과 통계 / 통계적 추정 단원">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">탐구 주제 (가제)</label>
+                                <input type="text" value="${state.studentPlan.activityTopic}" oninput="updatePlan('activityTopic', this.value)"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 청소년의 SNS 사용시간과 자존감의 상관관계 분석">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">탐구 과정 (구체적으로!)</label>
+                                <p class="text-xs text-gray-500 mb-1">*우수 사례처럼 어떤 논문, 어떤 실험 도구, 어떤 통계 기법을 썼는지 적어보세요.</p>
+                                <textarea oninput="updatePlan('activityProcess', this.value)"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none" placeholder="예: 통계청 자료를 통해 기초 데이터를 수집하고...">${state.studentPlan.activityProcess}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">배우고 느낀 점 (진로 연계)</label>
+                                <textarea oninput="updatePlan('learningPoint', this.value)"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none" placeholder="예: 이론과 실제 데이터의 오차를 분석하며...">${state.studentPlan.learningPoint}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4 space-x-4">
+                        <button onclick="setStep(0)" class="px-6 py-3 rounded-lg font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+                            이전 단계
+                        </button>
+                        <button onclick="submitPlan()" class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center shadow-lg">
+                            <i data-lucide="message-square" class="mr-2 w-5 h-5"></i> 선생님 피드백 받기
                         </button>
                     </div>
                 </div>
-            ` : ''}
-        </div>
-    `;
-}
+            `;
+        }
 
-// (나머지 renderPlanning, renderFeedback 함수는 기존과 동일하게 유지하거나, 필요시 여기에 포함하여 전체를 붙여넣으셔도 됩니다. 
-//  여기서는 생략 없이 전체 코드를 다루려면 너무 길어지므로, 핵심인 renderAnalysis와 DEPARTMENTS만 바뀐 것을 강조합니다.)
-//  하지만 선생님의 편의를 위해 뒷부분도 그대로 작동하도록 아래에 이어 붙여 드립니다.
-
-function renderPlanning() {
-    return `
-        <div class="space-y-6 fade-in">
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-8 rounded-xl text-white mb-8">
-                <h2 class="text-2xl font-bold mb-2">🚀 생기부 디자인 워크숍</h2>
-                <p class="opacity-90">
-                    앞서 본 우수 사례들처럼, <strong>[구체적 소재 - 심화 탐구 - 진로 연계]</strong>가 드러나도록 설계해봅시다.
-                </p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">희망 진로 (학과)</label>
-                        <input type="text" value="${state.studentPlan.careerGoal}" oninput="updatePlan('careerGoal', this.value)" 
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 심리학과, 화학공학과">
+        function renderFeedback() {
+            return `
+                <div class="space-y-6 fade-in">
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">👩‍🏫 입학사정관 선생님의 1:1 피드백</h2>
+                        <p class="text-gray-500">학생이 작성한 설계안을 바탕으로 조언을 준비했습니다.</p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">관련 교과목 및 단원</label>
-                        <input type="text" value="${state.studentPlan.subject}" oninput="updatePlan('subject', this.value)"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 확률과 통계 / 통계적 추정 단원">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">탐구 주제 (가제)</label>
-                        <input type="text" value="${state.studentPlan.activityTopic}" oninput="updatePlan('activityTopic', this.value)"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="예: 청소년의 SNS 사용시간과 자존감의 상관관계 분석">
-                    </div>
-                </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">탐구 과정 (구체적으로!)</label>
-                        <p class="text-xs text-gray-500 mb-1">*우수 사례처럼 어떤 논문, 어떤 실험 도구, 어떤 통계 기법을 썼는지 적어보세요.</p>
-                        <textarea oninput="updatePlan('activityProcess', this.value)"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none" placeholder="예: 통계청 자료를 통해 기초 데이터를 수집하고...">${state.studentPlan.activityProcess}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">배우고 느낀 점 (진로 연계)</label>
-                        <textarea oninput="updatePlan('learningPoint', this.value)"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none" placeholder="예: 이론과 실제 데이터의 오차를 분석하며...">${state.studentPlan.learningPoint}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end pt-4 space-x-4">
-                <button onclick="setStep(0)" class="px-6 py-3 rounded-lg font-bold text-gray-500 hover:bg-gray-100 transition-colors">
-                    이전 단계
-                </button>
-                <button onclick="submitPlan()" class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex items-center shadow-lg">
-                    <i data-lucide="message-square" class="mr-2 w-5 h-5"></i> 선생님 피드백 받기
-                </button>
-            </div>
-        </div>
-    `;
-}
-
-function renderFeedback() {
-    return `
-        <div class="space-y-6 fade-in">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">👩‍🏫 입학사정관 선생님의 1:1 피드백</h2>
-                <p class="text-gray-500">학생이 작성한 설계안을 바탕으로 조언을 준비했습니다.</p>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-6">
-                <div class="lg:w-1/2 space-y-4">
-                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm opacity-90">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">학생의 설계안</h3>
-                        <div class="space-y-3">
-                            <div>
-                                <span class="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">희망 진로</span>
-                                <p class="font-bold text-gray-800 mt-1">${state.studentPlan.careerGoal || '(미입력)'}</p>
-                            </div>
-                            <div>
-                                <span class="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">탐구 주제</span>
-                                <p class="font-bold text-gray-800 mt-1">${state.studentPlan.activityTopic || '(미입력)'}</p>
-                            </div>
-                            <div class="border-t pt-2 mt-2">
-                                <p class="text-xs font-bold text-gray-400 mb-1">탐구 과정</p>
-                                <p class="text-sm text-gray-600">${state.studentPlan.activityProcess || '(미입력)'}</p>
-                            </div>
-                            <div class="border-t pt-2 mt-2">
-                                <p class="text-xs font-bold text-gray-400 mb-1">배우고 느낀 점</p>
-                                <p class="text-sm text-gray-600 italic">"${state.studentPlan.learningPoint || '(미입력)'}"</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="lg:w-1/2">
-                    ${state.isFeedbackLoading ? `
-                        <div class="h-full flex flex-col items-center justify-center p-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
-                            <p class="text-gray-500">작성 내용을 분석하여 대학 평가 기준에 대입 중입니다...</p>
-                        </div>
-                    ` : `
-                        <div class="bg-indigo-900 text-white p-6 rounded-xl shadow-xl relative overflow-hidden slide-up">
-                            <div class="absolute top-0 right-0 p-4 opacity-10">
-                                <i data-lucide="award" class="w-24 h-24"></i>
-                            </div>
-                            
-                            <h3 class="text-xl font-bold text-yellow-400 mb-4 flex items-center">
-                                <i data-lucide="message-square" class="mr-2"></i> 피드백 리포트
-                            </h3>
-
-                            <div class="space-y-4 text-indigo-100">
-                                <div class="bg-white/10 p-4 rounded-lg">
-                                    <strong class="text-white block mb-1">🌟 총평</strong>
-                                    <p class="text-sm leading-relaxed">
-                                        "${state.studentPlan.subject}" 교과 내용을 "${state.studentPlan.activityTopic}"(으)로 확장한 점이 인상적입니다. 
-                                        특히 앞서 시뮬레이션에서 본 것처럼, 진로(${state.studentPlan.careerGoal})와 관련된 구체적인 활동을 기획하려는 시도가 엿보입니다.
-                                    </p>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <strong class="text-yellow-300 text-sm">💡 디테일 강화 가이드</strong>
-                                    <ul class="space-y-2 text-sm list-none">
-                                        <li class="flex items-start bg-indigo-800/50 p-2 rounded">
-                                            <span class="mr-2">📚</span>
-                                            <span>
-                                                <strong>학업역량:</strong> 탐구 과정에서 참고한 자료(논문, 도서, 통계청 데이터 등)의 
-                                                <span class="text-yellow-200"> 구체적인 출처</span>를 명시하면 신뢰도가 올라갑니다.
-                                            </span>
-                                        </li>
-                                        <li class="flex items-start bg-indigo-800/50 p-2 rounded">
-                                            <span class="mr-2">🔎</span>
-                                            <span>
-                                                <strong>진로역량:</strong> 단순히 '알게 되었다'보다는, 탐구 과정에서 마주친 <span class="text-yellow-200">문제 상황을 어떻게 해결했는지</span>(오차 보정, 설문 재설계 등)를 적어주세요.
-                                            </span>
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <div class="bg-white/10 p-4 rounded-lg mt-4 border border-white/20">
-                                    <strong class="text-white block mb-1">🚀 선생님의 제안 (Follow-up)</strong>
-                                    <p class="text-sm">
-                                        이 활동 이후에, <strong>'${state.studentPlan.careerGoal}' 분야의 최신 이슈</strong>와 연결 지어 심화 보고서를 작성해보는 건 어떨까요? 
-                                        생기부는 꼬리에 꼬리를 무는 연계 활동이 있을 때 가장 높은 평가를 받습니다.
-                                    </p>
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="lg:w-1/2 space-y-4">
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm opacity-90">
+                                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">학생의 설계안</h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <span class="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">희망 진로</span>
+                                        <p class="font-bold text-gray-800 mt-1">${state.studentPlan.careerGoal || '(미입력)'}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">탐구 주제</span>
+                                        <p class="font-bold text-gray-800 mt-1">${state.studentPlan.activityTopic || '(미입력)'}</p>
+                                    </div>
+                                    <div class="border-t pt-2 mt-2">
+                                        <p class="text-xs font-bold text-gray-400 mb-1">탐구 과정</p>
+                                        <p class="text-sm text-gray-600">${state.studentPlan.activityProcess || '(미입력)'}</p>
+                                    </div>
+                                    <div class="border-t pt-2 mt-2">
+                                        <p class="text-xs font-bold text-gray-400 mb-1">배우고 느낀 점</p>
+                                        <p class="text-sm text-gray-600 italic">"${state.studentPlan.learningPoint || '(미입력)'}"</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    `}
+
+                        <div class="lg:w-1/2">
+                            ${state.isFeedbackLoading ? `
+                                <div class="h-full flex flex-col items-center justify-center p-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
+                                    <p class="text-gray-500">작성 내용을 분석하여 대학 평가 기준에 대입 중입니다...</p>
+                                </div>
+                            ` : `
+                                <div class="bg-indigo-900 text-white p-6 rounded-xl shadow-xl relative overflow-hidden slide-up">
+                                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                                        <i data-lucide="award" class="w-24 h-24"></i>
+                                    </div>
+                                    
+                                    <h3 class="text-xl font-bold text-yellow-400 mb-4 flex items-center">
+                                        <i data-lucide="message-square" class="mr-2"></i> 피드백 리포트
+                                    </h3>
+
+                                    <div class="space-y-4 text-indigo-100">
+                                        <div class="bg-white/10 p-4 rounded-lg">
+                                            <strong class="text-white block mb-1">🌟 총평</strong>
+                                            <p class="text-sm leading-relaxed">
+                                                "${state.studentPlan.subject}" 교과 내용을 "${state.studentPlan.activityTopic}"(으)로 확장한 점이 인상적입니다. 
+                                                특히 앞서 시뮬레이션에서 본 것처럼, 진로(${state.studentPlan.careerGoal})와 관련된 구체적인 활동을 기획하려는 시도가 엿보입니다.
+                                            </p>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <strong class="text-yellow-300 text-sm">💡 디테일 강화 가이드</strong>
+                                            <ul class="space-y-2 text-sm list-none">
+                                                <li class="flex items-start bg-indigo-800/50 p-2 rounded">
+                                                    <span class="mr-2">📚</span>
+                                                    <span>
+                                                        <strong>학업역량:</strong> 탐구 과정에서 참고한 자료(논문, 도서, 통계청 데이터 등)의 
+                                                        <span class="text-yellow-200"> 구체적인 출처</span>를 명시하면 신뢰도가 올라갑니다.
+                                                    </span>
+                                                </li>
+                                                <li class="flex items-start bg-indigo-800/50 p-2 rounded">
+                                                    <span class="mr-2">🔎</span>
+                                                    <span>
+                                                        <strong>진로역량:</strong> 단순히 '알게 되었다'보다는, 탐구 과정에서 마주친 <span class="text-yellow-200">문제 상황을 어떻게 해결했는지</span>(오차 보정, 설문 재설계 등)를 적어주세요.
+                                                    </span>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="bg-white/10 p-4 rounded-lg mt-4 border border-white/20">
+                                            <strong class="text-white block mb-1">🚀 선생님의 제안 (Follow-up)</strong>
+                                            <p class="text-sm">
+                                                이 활동 이후에, <strong>'${state.studentPlan.careerGoal}' 분야의 최신 이슈</strong>와 연결 지어 심화 보고서를 작성해보는 건 어떨까요? 
+                                                생기부는 꼬리에 꼬리를 무는 연계 활동이 있을 때 가장 높은 평가를 받습니다.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center pt-8">
+                        <button onclick="resetApp()" class="bg-white border-2 border-gray-300 text-gray-600 px-6 py-2 rounded-full font-bold hover:bg-gray-50 flex items-center">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4 mr-2"></i> 처음으로 돌아가기
+                        </button>
+                    </div>
                 </div>
-            </div>
+            `;
+        }
 
-            <div class="flex justify-center pt-8">
-                <button onclick="resetApp()" class="bg-white border-2 border-gray-300 text-gray-600 px-6 py-2 rounded-full font-bold hover:bg-gray-50 flex items-center">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4 mr-2"></i> 처음으로 돌아가기
-                </button>
-            </div>
-        </div>
-    `;
-}
+        // --- Logic Functions ---
+        function updateState(key, value) {
+            state[key] = value;
+            if (key === 'dept') {
+                state.showExpert = false;
+                setInitialCategory(); // 학과 변경 시 첫 번째 시나리오 자동 선택
+            } else if (key === 'category') {
+                state.showExpert = false;
+            }
+            render();
+        }
 
-// --- Logic Functions ---
-function updateState(key, value) {
-    state[key] = value;
-    if (key === 'dept') {
-        state.showExpert = false;
-        setInitialCategory(); // 학과 변경 시 첫 번째 버튼 자동 선택
-    } else if (key === 'category') {
-        state.showExpert = false;
-    }
-    render();
-}
+        function toggleExpert(show) {
+            state.showExpert = show;
+            render();
+        }
 
-function toggleExpert(show) {
-    state.showExpert = show;
-    render();
-}
+        function setStep(step) {
+            state.step = step;
+            window.scrollTo(0, 0);
+            render();
+        }
 
-function setStep(step) {
-    state.step = step;
-    window.scrollTo(0, 0);
-    render();
-}
+        function updatePlan(key, value) {
+            state.studentPlan[key] = value;
+        }
 
-function updatePlan(key, value) {
-    state.studentPlan[key] = value;
-}
+        function submitPlan() {
+            if (!state.studentPlan.careerGoal || !state.studentPlan.activityProcess) {
+                alert("진로와 탐구 과정을 최소한 작성해주세요!");
+                return;
+            }
+            state.step = 2;
+            state.isFeedbackLoading = true;
+            render();
+            setTimeout(() => {
+                state.isFeedbackLoading = false;
+                render();
+            }, 1500);
+        }
 
-function submitPlan() {
-    if (!state.studentPlan.careerGoal || !state.studentPlan.activityProcess) {
-        alert("진로와 탐구 과정을 최소한 작성해주세요!");
-        return;
-    }
-    state.step = 2;
-    state.isFeedbackLoading = true;
-    render();
-    setTimeout(() => {
-        state.isFeedbackLoading = false;
+        function resetApp() {
+            state = {
+                step: 0,
+                dept: 'psychology',
+                category: '',
+                showExpert: false,
+                studentPlan: { careerGoal: '', subject: '', activityTopic: '', activityProcess: '', learningPoint: '' },
+                isFeedbackLoading: false
+            };
+            render();
+        }
+
+        // 초기 렌더링
         render();
-    }, 1500);
-}
-
-function resetApp() {
-    state = {
-        step: 0,
-        dept: 'psychology',
-        category: '',
-        showExpert: false,
-        studentPlan: { careerGoal: '', subject: '', activityTopic: '', activityProcess: '', learningPoint: '' },
-        isFeedbackLoading: false
-    };
-    render();
-}
-
-// 초기 렌더링
-render();
+    </script>
+</body>
+</html>
