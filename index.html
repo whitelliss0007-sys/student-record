@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 입학사정관: 생기부 디자인 연구소 (Ver 5.7)</title>
+    <title>나만의 입학사정관: 생기부 디자인 연구소 (Ver 5.8)</title>
     <!-- Tailwind CSS (디자인) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons (아이콘) -->
@@ -46,6 +46,7 @@
 
         .pdf-header { border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
         .pdf-header h1 { font-size: 22pt; font-weight: 900; margin: 0; }
+        .pdf-header .student-info { font-size: 12pt; font-weight: bold; margin-top: 10px; color: #333; }
         .pdf-header .sub { font-size: 10pt; color: #666; text-align: right; margin-top: 5px; }
 
         .pdf-section { margin-bottom: 25px; }
@@ -112,6 +113,7 @@
         <div class="pdf-page">
             <div class="pdf-header">
                 <h1>학생부종합전형 설계 워크북</h1>
+                <div class="student-info" id="report-student-name"></div> <!-- 학번/이름 표시 -->
                 <div class="sub">출처: 2026 서울여대 학생부종합 가이드북</div>
             </div>
 
@@ -309,6 +311,7 @@
             showExpert: false,
             analysisInput: '', 
             studentPlan: { careerGoal: '', subject: '', activityTopic: '', activityProcess: '', learningPoint: '' },
+            studentInfo: '', // Added student info state
             isFeedbackLoading: false
         };
 
@@ -317,6 +320,7 @@
             const element = document.getElementById('pdf-wrapper');
             
             // 데이터 채우기
+            document.getElementById('report-student-name').innerText = state.studentInfo ? `작성자: ${state.studentInfo}` : "";
             document.getElementById('report-category').innerText = `[${DEPARTMENTS[state.dept].categories[state.tab].label}] - ${DEPARTMENTS[state.dept].categories[state.tab].scenarios[state.scenarioKey].title}`;
             document.getElementById('report-analysis').innerText = state.analysisInput || "(작성 내용 없음)";
             document.getElementById('report-career').innerText = state.studentPlan.careerGoal || "미입력";
@@ -325,16 +329,12 @@
             document.getElementById('report-process').innerText = state.studentPlan.activityProcess || "미입력";
             document.getElementById('report-learning').innerText = state.studentPlan.learningPoint || "미입력";
 
-            // html2canvas로 캡처
-            // scale: 2 (고해상도)
             const canvas = await html2canvas(element, { scale: 2, useCORS: true });
             const imgData = canvas.toDataURL('image/png');
             
-            // jspdf - A4 size
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
             
-            // 이미지 크기 계산
             const imgWidth = 210; 
             const pageHeight = 297; 
             const imgHeight = canvas.height * imgWidth / canvas.width;
@@ -361,6 +361,10 @@
             if(confirm("메인 화면으로 돌아가시겠습니까?\n작성 중인 내용은 초기화될 수 있습니다.")) {
                 resetApp();
             }
+        }
+
+        function updateStudentInfo(input) {
+            state.studentInfo = input.value;
         }
 
         function setInitialScenario() {
@@ -403,6 +407,16 @@
                         </div>
                         <h1 class="text-3xl font-extrabold text-gray-900 mb-2">입학사정관의 눈으로,<br/>나의 생기부 다시 쓰기</h1>
                         <p class="text-sm text-gray-500 mt-2">출처: 2026 서울여대 학생부종합 가이드</p>
+                    </div>
+                    
+                    <div class="max-w-md mx-auto">
+                        <label class="block text-left text-sm font-bold text-gray-700 mb-2">학번 / 이름</label>
+                        <input type="text" 
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="예: 10101 홍길동"
+                            value="${state.studentInfo || ''}"
+                            oninput="updateStudentInfo(this)"
+                        >
                     </div>
 
                     <div class="grid md:grid-cols-3 gap-6 text-left">
@@ -715,7 +729,6 @@
         }
 
         // --- Logic Functions ---
-        
         function updateAnalysisText(textarea) {
             const length = textarea.value.length;
             state.analysisInput = textarea.value;
@@ -797,7 +810,8 @@
                 showExpert: false,
                 analysisInput: '',
                 studentPlan: { careerGoal: '', subject: '', activityTopic: '', activityProcess: '', learningPoint: '' },
-                isFeedbackLoading: false
+                isFeedbackLoading: false,
+                studentInfo: ''
             };
             render();
         }
