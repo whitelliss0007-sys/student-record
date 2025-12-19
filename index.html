@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 입학사정관: 생기부 디자인 연구소 (Ver 4.4)</title>
+    <title>나만의 입학사정관: 생기부 디자인 연구소 (Ver 5.4)</title>
     <!-- Tailwind CSS (디자인) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons (아이콘) -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PDF 생성을 위한 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -17,11 +20,59 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c7c7c7; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+
+        /* PDF 스타일 (화면 밖 숨김 처리, 너비 고정) */
+        #pdf-wrapper {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 210mm; /* A4 Width */
+            background: white;
+            color: black;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        /* PDF 내부 콘텐츠 스타일 */
+        .pdf-page {
+            padding: 20mm;
+            min-height: 297mm; /* A4 Height */
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .pdf-header { border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
+        .pdf-header h1 { font-size: 22pt; font-weight: 900; margin: 0; }
+        .pdf-header .sub { font-size: 10pt; color: #666; text-align: right; margin-top: 5px; }
+
+        .pdf-section { margin-bottom: 25px; }
+        .pdf-section h2 { 
+            font-size: 14pt; font-weight: bold; color: #4f46e5; 
+            border-left: 5px solid #4f46e5; padding-left: 10px; margin-bottom: 15px; 
+        }
+        
+        .pdf-item { margin-bottom: 15px; }
+        .pdf-label { 
+            font-size: 10pt; font-weight: bold; color: #444; background-color: #f3f4f6; 
+            display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; 
+        }
+        .pdf-content { 
+            font-size: 10pt; line-height: 1.6; color: #111; 
+            border: 1px solid #e5e7eb; padding: 10px; border-radius: 5px; white-space: pre-wrap;
+        }
+
+        /* 선생님 피드백 박스 (빈칸) */
+        .teacher-box {
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            height: 150px; /* 넉넉한 높이 */
+            margin-top: 5px;
+        }
+        .teacher-label { font-weight: bold; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 pb-20">
@@ -29,14 +80,19 @@
     <!-- Header -->
     <header class="bg-white border-b sticky top-0 z-10 shadow-sm">
         <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onclick="goHome()">
                 <i data-lucide="book-open" class="text-indigo-600 w-8 h-8"></i>
                 <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-gray-900">
                     나만의 입학사정관 <span class="text-indigo-600 font-medium text-sm md:text-base ml-2">생기부 디자인 연구소</span>
                 </h1>
             </div>
-            <div class="text-xs md:text-sm text-gray-500 font-medium">
-                서울여대 2026 가이드북 기반
+            <div class="flex items-center gap-4">
+                <div class="text-xs md:text-sm text-gray-500 font-medium hidden sm:block">
+                    서울여대 2026 가이드북 기반
+                </div>
+                <button onclick="goHome()" class="text-gray-500 hover:text-indigo-600" title="처음으로 돌아가기">
+                    <i data-lucide="home" class="w-6 h-6"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -45,6 +101,67 @@
     <main class="max-w-4xl mx-auto px-4 py-8" id="app">
         <!-- JS로 내용이 렌더링 됩니다 -->
     </main>
+
+    <!-- PDF Report Structure (Hidden) -->
+    <div id="pdf-wrapper">
+        <div class="pdf-page">
+            <div class="pdf-header">
+                <h1>학생부종합전형 설계 워크북</h1>
+                <div class="sub">출처: 2026 서울여대 학생부종합 가이드북</div>
+            </div>
+
+            <!-- 1. 입학사정관 시뮬레이션 -->
+            <div class="pdf-section">
+                <h2>1. 입학사정관 시뮬레이션 (Analysis)</h2>
+                <div class="pdf-item">
+                    <span class="pdf-label">선택한 역량 및 과목</span>
+                    <div class="pdf-content" id="report-category"></div>
+                </div>
+                <div class="pdf-item">
+                    <span class="pdf-label">Q. 우수한 학생과 부족한 학생의 차이점 분석</span>
+                    <div class="pdf-content" id="report-analysis"></div>
+                </div>
+            </div>
+
+            <!-- 2. 나만의 생기부 설계 -->
+            <div class="pdf-section">
+                <h2>2. 나만의 생기부 설계 (Design)</h2>
+                <div class="pdf-item">
+                    <span class="pdf-label">희망 진로</span>
+                    <div class="pdf-content" id="report-career"></div>
+                </div>
+                <div class="pdf-item">
+                    <span class="pdf-label">관련 교과/단원</span>
+                    <div class="pdf-content" id="report-subject"></div>
+                </div>
+                <div class="pdf-item">
+                    <span class="pdf-label">탐구 주제</span>
+                    <div class="pdf-content" id="report-topic"></div>
+                </div>
+                <div class="pdf-item">
+                    <span class="pdf-label">탐구 과정 (구체적 활동)</span>
+                    <div class="pdf-content" id="report-process"></div>
+                </div>
+                <div class="pdf-item">
+                    <span class="pdf-label">배우고 느낀 점 (성장)</span>
+                    <div class="pdf-content" id="report-learning"></div>
+                </div>
+            </div>
+
+            <!-- 3. 선생님 피드백 (수기 작성용) -->
+            <div class="pdf-section" style="page-break-inside: avoid;"> 
+                <h2>3. 선생님 피드백 (Feedback)</h2>
+                <div style="margin-bottom: 15px;">
+                    <span class="teacher-label">📌 선생님 총평</span>
+                    <div class="teacher-box"></div>
+                </div>
+                <div>
+                    <span class="teacher-label">🚀 선생님의 제안 (구체적 가이드)</span>
+                    <div class="teacher-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- 데이터 ---
@@ -185,12 +302,66 @@
             tab: 'academic', 
             scenarioKey: '',
             showExpert: false,
-            analysisInput: '', // Step 0 (Analysis) input
+            analysisInput: '', 
             studentPlan: { careerGoal: '', subject: '', activityTopic: '', activityProcess: '', learningPoint: '' },
             isFeedbackLoading: false
         };
 
-        // 초기 시나리오 키 설정
+        // --- PDF Generation Function ---
+        window.downloadPDF = async function() {
+            // PDF 다운로드 전, 화면에서 볼 땐 빈칸이어도 PDF에서는 데이터가 들어가야 한다면
+            // 여기서 innerText를 세팅합니다. 
+            // 현재 요구사항: PDF에서도 피드백 란은 빈칸(수기 작성용)이어야 함.
+            
+            const element = document.getElementById('pdf-wrapper');
+            
+            // 데이터 채우기 (이미 화면에 렌더링된 것을 캡처하는 방식이 아님. 숨겨진 템플릿 사용)
+            document.getElementById('report-category').innerText = `[${DEPARTMENTS[state.dept].categories[state.tab].label}] - ${DEPARTMENTS[state.dept].categories[state.tab].scenarios[state.scenarioKey].title}`;
+            document.getElementById('report-analysis').innerText = state.analysisInput || "(작성 내용 없음)";
+            document.getElementById('report-career').innerText = state.studentPlan.careerGoal || "";
+            document.getElementById('report-subject').innerText = state.studentPlan.subject || "";
+            document.getElementById('report-topic').innerText = state.studentPlan.activityTopic || "";
+            document.getElementById('report-process').innerText = state.studentPlan.activityProcess || "";
+            document.getElementById('report-learning').innerText = state.studentPlan.learningPoint || "";
+
+            // html2canvas로 캡처
+            // scale: 2 (고해상도)
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            
+            // jspdf - A4 size
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            // 이미지 크기 계산
+            const imgWidth = 210; // A4 width
+            const pageHeight = 297; // A4 height
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // 첫 페이지 추가
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // 내용이 A4를 넘어가면 페이지 추가 루프
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            pdf.save('나만의_생기부_설계_보고서.pdf');
+        }
+
+        function goHome() {
+            if(confirm("메인 화면으로 돌아가시겠습니까?\n작성 중인 내용은 초기화될 수 있습니다.")) {
+                resetApp();
+            }
+        }
+
         function setInitialScenario() {
             const scenarios = DEPARTMENTS[state.dept].categories[state.tab].scenarios;
             state.scenarioKey = Object.keys(scenarios)[0];
@@ -222,9 +393,7 @@
 
         function renderIntro() {
             const points = DEPARTMENTS[state.dept].evalPoints;
-            const currentLength = state.analysisInput.length;
-            const isEnough = currentLength >= 150;
-
+            
             return `
                 <div class="fade-in max-w-5xl mx-auto text-center space-y-8 pt-6">
                     <div>
@@ -518,40 +687,17 @@
                                     </h3>
 
                                     <div class="space-y-4 text-indigo-100">
-                                        <div class="bg-white/10 p-4 rounded-lg">
-                                            <strong class="text-white block mb-1">🌟 총평</strong>
-                                            <p class="text-sm leading-relaxed">
-                                                "${state.studentPlan.subject}" 교과 내용을 "${state.studentPlan.activityTopic}"(으)로 확장한 점이 인상적입니다. 
-                                                특히 앞서 시뮬레이션에서 본 것처럼, 진로(${state.studentPlan.careerGoal})와 관련된 구체적인 활동을 기획하려는 시도가 엿보입니다.
+                                        <div class="bg-white/10 p-4 rounded-lg border border-white/20 text-center py-10">
+                                            <p class="text-lg font-bold mb-2">선생님과 상담하여 채워나가는 공간입니다.</p>
+                                            <p class="text-sm opacity-80">
+                                                출력된 PDF 보고서의 빈칸에<br/>선생님의 소중한 조언을 직접 받아보세요!
                                             </p>
                                         </div>
-
-                                        <div class="space-y-2">
-                                            <strong class="text-yellow-300 text-sm">💡 디테일 강화 가이드</strong>
-                                            <ul class="space-y-2 text-sm list-none">
-                                                <li class="flex items-start bg-indigo-800/50 p-2 rounded">
-                                                    <span class="mr-2">📚</span>
-                                                    <span>
-                                                        <strong>학업역량:</strong> 탐구 과정에서 참고한 자료(논문, 도서, 통계청 데이터 등)의 
-                                                        <span class="text-yellow-200"> 구체적인 출처</span>를 명시하면 신뢰도가 올라갑니다.
-                                                    </span>
-                                                </li>
-                                                <li class="flex items-start bg-indigo-800/50 p-2 rounded">
-                                                    <span class="mr-2">🔎</span>
-                                                    <span>
-                                                        <strong>진로역량:</strong> 단순히 '알게 되었다'보다는, 탐구 과정에서 마주친 <span class="text-yellow-200">문제 상황을 어떻게 해결했는지</span>(오차 보정, 설문 재설계 등)를 적어주세요.
-                                                    </span>
-                                                </li>
-                                            </ul>
-                                        </div>
-
-                                        <div class="bg-white/10 p-4 rounded-lg mt-4 border border-white/20">
-                                            <strong class="text-white block mb-1">🚀 선생님의 제안 (Follow-up)</strong>
-                                            <p class="text-sm">
-                                                이 활동 이후에, <strong>'${state.studentPlan.careerGoal}' 분야의 최신 이슈</strong>와 연결 지어 심화 보고서를 작성해보는 건 어떨까요? 
-                                                생기부는 꼬리에 꼬리를 무는 연계 활동이 있을 때 가장 높은 평가를 받습니다.
-                                            </p>
-                                        </div>
+                                    </div>
+                                    <div class="mt-6 flex justify-end">
+                                        <button onclick="downloadPDF()" class="bg-yellow-500 text-indigo-900 px-6 py-3 rounded-full font-bold hover:bg-yellow-400 transition-colors flex items-center shadow-lg">
+                                            <i data-lucide="download" class="mr-2 w-5 h-5"></i> 활동 보고서 PDF 저장
+                                        </button>
                                     </div>
                                 </div>
                             `}
@@ -567,19 +713,12 @@
             `;
         }
 
-        // --- Logic Functions ---
-        
         function updateAnalysisText(textarea) {
             const length = textarea.value.length;
             state.analysisInput = textarea.value;
-            
             const countSpan = document.getElementById('analysisCharCount');
-            const btn = textarea.nextElementSibling.querySelector('button'); // 버튼 찾기
-            
-            // 텍스트 업데이트
+            const btn = textarea.nextElementSibling.querySelector('button');
             countSpan.textContent = `현재 ${length}자 / 100자`;
-            
-            // 스타일 및 상태 업데이트
             if (length >= 100) {
                 countSpan.classList.remove('text-red-500');
                 countSpan.classList.add('text-green-600');
@@ -604,15 +743,15 @@
             if (key === 'dept') {
                 state.tab = 'academic';
                 state.showExpert = false;
-                state.analysisInput = ''; // 탭/과목 변경 시 입력 초기화
+                state.analysisInput = ''; 
                 setInitialScenario();
             } else if (key === 'tab') {
                 state.showExpert = false;
-                state.analysisInput = ''; // 탭/과목 변경 시 입력 초기화
+                state.analysisInput = ''; 
                 setInitialScenario();
             } else if (key === 'scenarioKey') {
                 state.showExpert = false;
-                state.analysisInput = ''; // 탭/과목 변경 시 입력 초기화
+                state.analysisInput = ''; 
             }
             render();
         }
