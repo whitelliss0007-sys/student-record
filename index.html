@@ -316,46 +316,45 @@
         };
 
         // --- PDF Generation Function ---
-        window.downloadPDF = async function() {
-            const element = document.getElementById('pdf-wrapper');
-            
-            // 데이터 채우기
-            document.getElementById('report-student-name').innerText = state.studentInfo ? `작성자: ${state.studentInfo}` : "";
-            document.getElementById('report-category').innerText = `[${DEPARTMENTS[state.dept].categories[state.tab].label}] - ${DEPARTMENTS[state.dept].categories[state.tab].scenarios[state.scenarioKey].title}`;
-            document.getElementById('report-analysis').innerText = state.analysisInput || "(작성 내용 없음)";
-            document.getElementById('report-career').innerText = state.studentPlan.careerGoal || "미입력";
-            document.getElementById('report-subject').innerText = state.studentPlan.subject || "미입력";
-            document.getElementById('report-topic').innerText = state.studentPlan.activityTopic || "미입력";
-            document.getElementById('report-process').innerText = state.studentPlan.activityProcess || "미입력";
-            document.getElementById('report-learning').innerText = state.studentPlan.learningPoint || "미입력";
+        // --- PDF 생성 및 다운로드 함수 (수정본) ---
+window.downloadPDF = async function() {
+    const element = document.getElementById('pdf-wrapper');
+    
+    // 1. 데이터 채우기 (기존 로직 유지)
+    document.getElementById('report-student-name').innerText = state.studentInfo ? `작성자: ${state.studentInfo}` : "";
+    document.getElementById('report-category').innerText = `[${DEPARTMENTS[state.dept].categories[state.tab].label}] - ${DEPARTMENTS[state.dept].categories[state.tab].scenarios[state.scenarioKey].title}`;
+    document.getElementById('report-analysis').innerText = state.analysisInput || "(작성 내용 없음)";
+    document.getElementById('report-career').innerText = state.studentPlan.careerGoal || "미입력";
+    document.getElementById('report-subject').innerText = state.studentPlan.subject || "미입력";
+    document.getElementById('report-topic').innerText = state.studentPlan.activityTopic || "미입력";
+    document.getElementById('report-process').innerText = state.studentPlan.activityProcess || "미입력";
+    document.getElementById('report-learning').innerText = state.studentPlan.learningPoint || "미입력";
 
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-            const imgData = canvas.toDataURL('image/png');
-            
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            
-            const imgWidth = 210; 
-            const pageHeight = 297; 
-            const imgHeight = canvas.height * imgWidth / canvas.width;
-            
-            let heightLeft = imgHeight;
-            let position = 0;
+    // 2. html2canvas로 캡처
+    // 팁: 캡처 시 배경색이 투명하게 나오지 않도록 backgroundColor 설정
+    const canvas = await html2canvas(element, { 
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: "#ffffff" 
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
 
-            // 첫 페이지 추가
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+    // 3. 동적 페이지 높이 계산
+    const imgWidth = 210; // A4 가로 너비 (mm)
+    const imgHeight = (canvas.height * imgWidth) / canvas.width; // 가로비율에 맞춘 세로 높이 계산
 
-            // 내용이 A4를 넘어가면 페이지 추가 루프
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-            }
-            
-            pdf.save('나만의_생기부_설계_보고서.pdf');
-        }
+    // 4. PDF 생성 (페이지 크기를 콘텐츠 높이에 맞춤)
+    // 'a4' 대신 [가로, 세로] 배열을 넣어 동적 크기 지정
+    const pdf = new jsPDF('p', 'mm', [imgWidth, imgHeight]);
+    
+    // 이미지를 페이지 꽉 차게 삽입 (좌측상단 0,0 위치)
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    
+    // 5. 저장
+    pdf.save(`${state.studentInfo || '나의'}_생기부_설계_보고서.pdf`);
+}
 
         function goHome() {
             if(confirm("메인 화면으로 돌아가시겠습니까?\n작성 중인 내용은 초기화될 수 있습니다.")) {
